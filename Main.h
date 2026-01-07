@@ -44,30 +44,33 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define SAFE_DELETE(ptr)          { if (ptr) { delete ptr; ptr = NULL; } }
 #define SAFE_FREE(ptr)            { if (ptr) { free(ptr); ptr = NULL; } }
 
-typedef struct _AppData {
-  HWND hButtonOpen;
-  HWND hButtonExctact;
-  HWND hTreeFileSystem;
-  HWND hStatusBar;
-  HWND hStaticInfo;
-  HWND hProgressBar;
 
-  kukdh1::Tree *CTree;
-  kukdh1::Meta *CMeta;
-  kukdh1::Setting CSetting;
+typedef struct _AppData 
+{
+    HWND hButtonOpen;
+    HWND hButtonExctact;
+    HWND hTreeFileSystem;
+    HWND hStatusBar;
+    HWND hStaticInfo;
+    HWND hProgressBar;
 
-  WCHAR *wpszFolderPath;
-  HFONT hFont;
+    kukdh1::Tree* CTree;
+    kukdh1::Meta* CMeta;
+    kukdh1::Setting CSetting;
 
-  _AppData() :
-    CTree(NULL),
-    CMeta(NULL),
-    wpszFolderPath(NULL) {}
-  ~_AppData() {
-    SAFE_DELETE(CTree);
-    SAFE_DELETE(CMeta);
-    SAFE_FREE(wpszFolderPath);
-  }
+    WCHAR* wpszFolderPath;
+    HFONT hFont;
+
+    _AppData() :
+        CTree(NULL),
+        CMeta(NULL),
+        wpszFolderPath(NULL) {
+    }
+    ~_AppData() {
+        SAFE_DELETE(CTree);
+        SAFE_DELETE(CMeta);
+        SAFE_FREE(wpszFolderPath);
+    }
 } AppData;
 
 #endif
