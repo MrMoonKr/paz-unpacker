@@ -47,26 +47,35 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 typedef struct _AppData 
 {
-    HWND hButtonOpen;
-    HWND hButtonExctact;
-    HWND hTreeFileSystem;
-    HWND hStatusBar;
-    HWND hStaticInfo;
-    HWND hProgressBar;
+    HWND            hButtonOpen;
+    HWND            hButtonExctact;
+    HWND            hTreeFileSystem;
+    HWND            hStatusBar;
+    HWND            hStaticInfo;
+    HWND            hProgressBar;
 
-    kukdh1::Tree* CTree;
-    kukdh1::Meta* CMeta;
+    kukdh1::Tree*   CTree;
+    kukdh1::Meta*   CMeta;
     kukdh1::Setting CSetting;
 
-    WCHAR* wpszFolderPath;
-    HFONT hFont;
+    WCHAR*          wpszFolderPath;
+    HFONT           hFont;
 
     _AppData() :
+        hButtonOpen(NULL),
+        hButtonExctact(NULL),
+        hTreeFileSystem(NULL),
+        hStatusBar(NULL),
+        hStaticInfo(NULL),
+        hProgressBar(NULL),
         CTree(NULL),
         CMeta(NULL),
-        wpszFolderPath(NULL) {
+        wpszFolderPath(NULL),
+        hFont(NULL)
+    {
     }
-    ~_AppData() {
+    ~_AppData() 
+    {
         SAFE_DELETE(CTree);
         SAFE_DELETE(CMeta);
         SAFE_FREE(wpszFolderPath);

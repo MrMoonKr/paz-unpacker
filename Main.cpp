@@ -125,33 +125,36 @@ void Cls_OnCommand( HWND hWnd, int id, HWND hwndCtl, UINT codeNotify )
             WCHAR* pszFolderPath = (WCHAR*)calloc(4096, sizeof(WCHAR));
             std::wstring wsLastPath;
 
-            app.CSetting.getData(SETTING_LAST_FOLDER, wsLastPath, L"C:\\");
+            app.CSetting.getData( SETTING_LAST_FOLDER, wsLastPath, L"C:\\" );
 
-            if (kukdh1::BrowseFolder(hWnd, app.CSetting.getString(kukdh1::Setting::ID_SELECT_FOLDER_TO_OPEN).c_str(), wsLastPath.c_str(), pszFolderPath, 4096)) {
+            if ( kukdh1::BrowseFolder( hWnd, app.CSetting.getString( kukdh1::Setting::ID_SELECT_FOLDER_TO_OPEN ).c_str(), wsLastPath.c_str(), pszFolderPath, 4096 ) ) 
+            {
                 {
-                    TreeView_DeleteAllItems(app.hTreeFileSystem);
-                    SendMessage(app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)L"");
-                    SAFE_DELETE(app.CTree);
-                    SAFE_DELETE(app.CMeta);
-                    SAFE_FREE(app.wpszFolderPath);
+                    TreeView_DeleteAllItems( app.hTreeFileSystem );
+                    SendMessage( app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)L"" );
+                    SAFE_DELETE( app.CTree );
+                    SAFE_DELETE( app.CMeta );
+                    SAFE_FREE( app.wpszFolderPath );
                 }
 
-                app.wpszFolderPath = (WCHAR*)calloc(wcslen(pszFolderPath) + 1, sizeof(WCHAR));
-                wcscpy_s(app.wpszFolderPath, wcslen(pszFolderPath) + 1, pszFolderPath);
+                app.wpszFolderPath = (WCHAR*)calloc( wcslen( pszFolderPath ) + 1, sizeof(WCHAR) );
+                wcscpy_s( app.wpszFolderPath, wcslen( pszFolderPath ) + 1, pszFolderPath );
 
                 app.CSetting.setData(SETTING_LAST_FOLDER, app.wpszFolderPath);
 
                 wsprintf(pszFolderPath, app.CSetting.getString(kukdh1::Setting::ID_CAPTION_WITH_PATH).c_str(), app.wpszFolderPath);
                 SetWindowText(hWnd, pszFolderPath);
 
-                try {
-                    app.CMeta = new kukdh1::Meta(app.wpszFolderPath);
-                    app.CTree = new kukdh1::Tree(kukdh1::Tree::TREE_TYPE_ROOT);
+                try 
+                {
+                    app.CMeta = new kukdh1::Meta( app.wpszFolderPath );
+                    app.CTree = new kukdh1::Tree( kukdh1::Tree::TREE_TYPE_ROOT );
 
-                    HANDLE hThread = CreateThread(NULL, 0, FileThread, NULL, 0, NULL);
-                    CloseHandle(hThread);
+                    HANDLE hThread = CreateThread( NULL, 0, FileThread, NULL, 0, NULL );
+                    if ( hThread ) CloseHandle( hThread );
                 }
-                catch (std::exception e) {
+                catch (std::exception e) 
+                {
                     MessageBox(hWnd, app.CSetting.getString(kukdh1::Setting::ID_NO_META_FILE_EXISTS).c_str(), app.CSetting.getString(kukdh1::Setting::ID_ALERT).c_str(), MB_OK);
                     SAFE_DELETE(app.CMeta);
                     SAFE_FREE(app.wpszFolderPath);
@@ -242,7 +245,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
                             if (app.CMeta != NULL) {
                                 kukdh1::ConvertCapacity(app.CTree->GetCapacity(), capacity);
 
-                                wsprintf(pszBuffer, app.CSetting.getString(kukdh1::Setting::ID_META_FILE_INFO).c_str(), app.CMeta->uiVersion, app.CMeta->uiPAZFileCount, capacity.c_str());
+                                wsprintf(pszBuffer, app.CSetting.getString(kukdh1::Setting::ID_META_FILE_INFO).c_str(), app.CMeta->m_Version, app.CMeta->m_PAZCount, capacity.c_str());
                                 SendMessage(app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)pszBuffer);
                             }
 
@@ -285,34 +288,40 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 
 DWORD WINAPI FileThread( LPVOID arg ) 
 {
-    kukdh1::CryptICE cipher(ICE_KEY, ICE_KEY_LEN);
+    kukdh1::CryptICE cipher( ICE_KEY, ICE_KEY_LEN );
+
     std::vector<std::string> paths;
     WCHAR buffer[64];
 
     EnableWindow(app.hButtonOpen, FALSE);
     EnableWindow(app.hTreeFileSystem, FALSE);
-    SendMessage(app.hStatusBar, SB_SETTEXT, 0, (LPARAM)app.CSetting.getString(kukdh1::Setting::ID_STATUS_BUSY).c_str());
+    SendMessage( app.hStatusBar, SB_SETTEXT, 0, (LPARAM)app.CSetting.getString(kukdh1::Setting::ID_STATUS_BUSY).c_str());
 
-    SendMessage(app.hProgressBar, PBM_SETRANGE32, 0, app.CMeta->uiPAZFileCount);
+    SendMessage( app.hProgressBar, PBM_SETRANGE32, 0, app.CMeta->m_PAZCount);
     uint32_t i = 0;
 
-    for (auto iter = app.CMeta->vPAZs.begin(); iter != app.CMeta->vPAZs.end(); iter++) {
-        SendMessage(app.hProgressBar, PBM_SETPOS, i++, NULL);
-        wsprintf(buffer, app.CSetting.getString(kukdh1::Setting::ID_PROGRESS_READING).c_str(), i, app.CMeta->uiPAZFileCount);
-        SendMessage(app.hStatusBar, SB_SETTEXT, 2, (LPARAM)buffer);
+    /*for ( auto iter = app.CMeta->m_PAZs.begin() ; iter != app.CMeta->m_PAZs.end() ; iter++ ) 
+    {
+        SendMessage( app.hProgressBar, PBM_SETPOS, i++, NULL );
+        wsprintf( buffer, app.CSetting.getString( kukdh1::Setting::ID_PROGRESS_READING ).c_str(), i, app.CMeta->m_PAZCount );
+        SendMessage( app.hStatusBar, SB_SETTEXT, 2, (LPARAM)buffer );
 
-        kukdh1::PazFile paz(app.wpszFolderPath, iter->uiPazFileID, cipher);
+        kukdh1::PazFile paz( app.wpszFolderPath, iter->uiPazFileID, cipher );
 
-        for (auto file = paz.vFileInfo.begin(); file != paz.vFileInfo.end(); file++) {
+        for ( auto file = paz.vFileInfo.begin(); file != paz.vFileInfo.end(); file++ )
+        {
             kukdh1::Tree* ptr = app.CTree;
-            kukdh1::ParsePath(file->sFullPath, paths);
+            kukdh1::ParsePath( file->sFullPath, paths );
 
-            for (auto path = paths.begin(); path != paths.end() - 1; path++) {
+            for ( auto path = paths.begin(); path != paths.end() - 1; path++) 
+            {
                 kukdh1::Tree* temp = ptr->GetChildFolderWithName(*path);
-                if (temp) {
+                if (temp) 
+                {
                     ptr = temp;
                 }
-                else {
+                else 
+                {
                     temp = new kukdh1::Tree(kukdh1::Tree::TREE_TYPE_FOLDER);
                     temp->SetFolderInfo(ptr, *path);
                     ptr->AddChild(temp);
@@ -320,10 +329,39 @@ DWORD WINAPI FileThread( LPVOID arg )
                 }
             }
 
-            kukdh1::Tree* temp = new kukdh1::Tree(kukdh1::Tree::TREE_TYPE_FILE);
-            temp->SetFileInfo(ptr, paths.back(), *file);
-            ptr->AddChild(temp);
+            kukdh1::Tree* temp = new kukdh1::Tree( kukdh1::Tree::TREE_TYPE_FILE );
+            temp->SetFileInfo( ptr, paths.back(), *file );
+            ptr->AddChild( temp );
         }
+    }*/
+
+    auto assetNames = app.CMeta->m_AssetNames;
+    auto assets = app.CMeta->m_Assets;
+    int assetIter = 0;
+    for ( auto path = assetNames.begin(); path != assetNames.end(); ++path, ++assetIter )
+    {
+        kukdh1::Tree* ptr = app.CTree;
+        kukdh1::ParsePath( *path, paths );
+
+        for ( auto folder = paths.begin(); folder != paths.end() - 1; ++folder ) 
+        {
+            kukdh1::Tree* temp = ptr->GetChildFolderWithName(*folder);
+            if (temp) 
+            {
+                ptr = temp;
+            }
+            else 
+            {
+                temp = new kukdh1::Tree( kukdh1::Tree::TREE_TYPE_FOLDER );
+                temp->SetFolderInfo( ptr, *folder );
+                ptr->AddChild( temp );
+                ptr = temp;
+            }
+        }
+
+        kukdh1::Tree* temp = new kukdh1::Tree( kukdh1::Tree::TREE_TYPE_FILE );
+        temp->SetFileInfo( ptr, paths.back(), assets[assetIter]);
+        ptr->AddChild(temp);
     }
 
     SendMessage(app.hProgressBar, PBM_SETPOS, 0, NULL);
@@ -490,11 +528,12 @@ DWORD WINAPI ExtractThread(LPVOID arg) {
     return 0;
 }
 
-DWORD WINAPI AddThread(LPVOID arg) 
+DWORD WINAPI AddThread( LPVOID arg ) 
 {
     kukdh1::Tree* pTree = (kukdh1::Tree*)arg;
 
-    if (!pTree->IsGrandchildAdded()) {
+    if ( !pTree->IsGrandchildAdded() ) 
+    {
         EnableWindow(app.hTreeFileSystem, FALSE);
         EnableWindow(app.hButtonOpen, FALSE);
         EnableWindow(app.hButtonExctact, FALSE);

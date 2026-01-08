@@ -10,12 +10,14 @@
 #include <string>
 #include <sstream>
 
-namespace kukdh1 {
-  HTREEITEM AddTreeItem(HWND hTree, HTREEITEM hParent, HTREEITEM hInsertAfter, LPWSTR pszText, LPARAM lParam);
-  BOOL BrowseFolder(HWND hParent, LPCWSTR szTitle, LPCWSTR szStartPath, WCHAR *szFolder, DWORD dwBufferLength);
-  void ParsePath(std::string path, std::vector<std::string> &folders);
-  void ConvertWidechar(std::string &in, std::wstring &out);
-  void ConvertCapacity(LARGE_INTEGER &value, std::wstring &out);
+namespace kukdh1 
+{
+    HTREEITEM AddTreeItem(HWND hTree, HTREEITEM hParent, HTREEITEM hInsertAfter, LPWSTR pszText, LPARAM lParam);
+    BOOL BrowseFolder(HWND hParent, LPCWSTR szTitle, LPCWSTR szStartPath, WCHAR* szFolder, DWORD dwBufferLength);
+    BOOL SelectFileName(HWND hParent, LPCWSTR szTitle, LPCWSTR szFilter, WCHAR* szFile, DWORD dwBufferLength);
+    void ParsePath(std::string path, std::vector<std::string>& folders);
+    void ConvertWidechar(std::string& in, std::wstring& out);
+    void ConvertCapacity(LARGE_INTEGER& value, std::wstring& out);
 }
 
 #endif
