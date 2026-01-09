@@ -50,9 +50,11 @@ typedef struct _AppData
 {
     HWND            hButtonOpen;
     HWND            hButtonExctact;
+
     HWND            hTreeFileSystem;
+    HWND            hStaticInfo
+        ;
     HWND            hStatusBar;
-    HWND            hStaticInfo;
     HWND            hProgressBar;
 
     kukdh1::Tree*   CTree;

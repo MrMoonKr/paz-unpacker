@@ -28,21 +28,21 @@ namespace kukdh1
 
     private:
         Tree*               m_pParent;
-        std::vector<Tree*>  vChildFiles;
         std::vector<Tree*>  vChildFolders;
-        std::string         sName;
+        std::vector<Tree*>  vChildFiles;
+        std::string         m_Name;
 
         TREE_TYPE           m_Type;
-        HTREEITEM           hThis;
         BOOL                m_Added;
 
-        FileInfo            fiFileInfo;
-        LARGE_INTEGER       liCapacity;
-
+        HTREEITEM           m_hTreeItem;
+        FileInfo            m_FileInfo;
         PADAsset            m_AssetInfo;
+        LARGE_INTEGER       m_Capacity;
+
 
     public:
-        Tree(TREE_TYPE type);
+        Tree( TREE_TYPE type );
         ~Tree();
 
         void AddToTree(HWND hTree);
@@ -67,6 +67,7 @@ namespace kukdh1
         size_t GetFolderCount();
         Tree* GetChildFolderWithName(std::string name);
         void GetFileList(std::vector<kukdh1::FileInfo>& vList);
+        void GetFileList(std::vector<kukdh1::PADAsset>& vList);
     };
 }
 

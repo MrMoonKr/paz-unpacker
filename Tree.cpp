@@ -16,8 +16,8 @@ namespace kukdh1
     {
         m_pParent = NULL;
         m_Type = type;
-        hThis = NULL;
-        liCapacity.QuadPart = 0;
+        m_hTreeItem = NULL;
+        m_Capacity.QuadPart = 0;
         m_Added = FALSE;
 
         m_AssetInfo;
@@ -43,14 +43,14 @@ namespace kukdh1
 
         if ( m_Type == TREE_TYPE_ROOT ) 
         {
-            hThis = AddTreeItem( hTree, NULL, TVI_ROOT, L"/", (LPARAM)this );
+            m_hTreeItem = AddTreeItem( hTree, NULL, TVI_ROOT, L"/", (LPARAM)this );
         }
         else if ( m_pParent != NULL )
         {
             std::wstring temp;
 
-            ConvertWidechar( sName, temp );
-            hThis = AddTreeItem( hTree, m_pParent->GetHandle(), TVI_LAST, (WCHAR*)temp.c_str(), (LPARAM)this );
+            ConvertWidechar( m_Name, temp );
+            m_hTreeItem = AddTreeItem( hTree, m_pParent->GetHandle(), TVI_LAST, (WCHAR*)temp.c_str(), (LPARAM)this );
         }
         else
         {
@@ -99,8 +99,8 @@ namespace kukdh1
     void Tree::SetFileInfo( Tree* pParent, std::string& name, FileInfo& fiFile )
     {
         this->m_pParent = pParent;
-        fiFileInfo = fiFile;
-        sName = name;
+        m_FileInfo = fiFile;
+        m_Name = name;
 
         m_Type = TREE_TYPE_FILE;
     }
@@ -109,7 +109,7 @@ namespace kukdh1
     {
         this->m_pParent = pParent;
         this->m_AssetInfo = fiFile;
-        sName = name;
+        m_Name = name;
 
         m_Type = TREE_TYPE_FILE;
     }
@@ -117,7 +117,7 @@ namespace kukdh1
     void Tree::SetFolderInfo( Tree* pParent, std::string& name )
     {
         this->m_pParent = pParent;
-        sName = name;
+        m_Name = name;
 
         m_Type = TREE_TYPE_FOLDER;
     }
@@ -147,22 +147,22 @@ namespace kukdh1
     }
 
     LARGE_INTEGER Tree::UpdateCapacity() {
-        liCapacity.QuadPart = 0;
+        m_Capacity.QuadPart = 0;
 
         if (m_Type == TREE_TYPE_FILE) {
-            liCapacity.QuadPart = fiFileInfo.uiOriginalSize;
+            m_Capacity.QuadPart = m_FileInfo.uiOriginalSize;
         }
         else {
             for (auto iter = vChildFiles.begin(); iter != vChildFiles.end(); iter++) {
-                liCapacity.QuadPart += (*iter)->UpdateCapacity().QuadPart;
+                m_Capacity.QuadPart += (*iter)->UpdateCapacity().QuadPart;
             }
 
             for (auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++) {
-                liCapacity.QuadPart += (*iter)->UpdateCapacity().QuadPart;
+                m_Capacity.QuadPart += (*iter)->UpdateCapacity().QuadPart;
             }
         }
 
-        return liCapacity;
+        return m_Capacity;
     }
 
     Tree* Tree::GetChildFolderWithName( std::string name ) 
@@ -185,11 +185,11 @@ namespace kukdh1
     }
 
     FileInfo Tree::GetFileInfo() {
-        return fiFileInfo;
+        return m_FileInfo;
     }
 
     HTREEITEM Tree::GetHandle() {
-        return hThis;
+        return m_hTreeItem;
     }
 
     BOOL Tree::IsAdded() {
@@ -223,11 +223,11 @@ namespace kukdh1
     }
 
     std::string Tree::GetName() {
-        return sName;
+        return m_Name;
     }
 
     LARGE_INTEGER Tree::GetCapacity() {
-        return liCapacity;
+        return m_Capacity;
     }
 
     size_t Tree::GetFileCount() {
@@ -240,7 +240,7 @@ namespace kukdh1
 
     void Tree::GetFileList(std::vector<kukdh1::FileInfo>& vList) {
         if (m_Type == TREE_TYPE_FILE) {
-            vList.push_back(fiFileInfo);
+            vList.push_back(m_FileInfo);
         }
         else {
             for (auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++) {

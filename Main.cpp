@@ -78,9 +78,10 @@ int APIENTRY wWinMain(  _In_ HINSTANCE      hInstance ,
     hWnd = CreateWindow( lpszClass.c_str(), lpszClass.c_str(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
     ShowWindow( hWnd, nCmdShow );
 
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+    while ( GetMessage( &msg, NULL, 0, 0 ) ) 
+    {
+        TranslateMessage( &msg );
+        DispatchMessage( &msg );
     }
 
     return msg.wParam;
@@ -88,17 +89,17 @@ int APIENTRY wWinMain(  _In_ HINSTANCE      hInstance ,
 
 BOOL Cls_OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct) {
     /* Create controls */
-    app.hButtonOpen = CreateWindow(WC_BUTTON, app.CSetting.getString(kukdh1::Setting::ID_OPEN).c_str(), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hWnd, (HMENU)ID_BUTTON_OPEN, lpCreateStruct->hInstance, NULL);
-    app.hButtonExctact = CreateWindow(WC_BUTTON, app.CSetting.getString(kukdh1::Setting::ID_EXTRACT).c_str(), WS_CHILD | WS_VISIBLE | WS_DISABLED | BS_PUSHBUTTON, 0, 0, 0, 0, hWnd, (HMENU)ID_BUTTON_EXTRACT, lpCreateStruct->hInstance, NULL);
-    app.hTreeFileSystem = CreateWindow(WC_TREEVIEW, NULL, WS_CHILD | WS_VISIBLE | TVS_DISABLEDRAGDROP | TVS_HASBUTTONS | TVS_TRACKSELECT | TVS_LINESATROOT, 0, 0, 0, 0, hWnd, (HMENU)ID_TREE_FILESYSTEM, lpCreateStruct->hInstance, NULL);
-    app.hStatusBar = CreateWindow(STATUSCLASSNAME, NULL, WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP, 0, 0, 0, 0, hWnd, (HMENU)ID_STATUSBAR, lpCreateStruct->hInstance, NULL);
-    app.hStaticInfo = CreateWindow(WC_STATIC, NULL, WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 0, 0, 0, 0, hWnd, (HMENU)ID_STATIC, lpCreateStruct->hInstance, NULL);
+    app.hButtonOpen     = CreateWindow( WC_BUTTON, app.CSetting.getString(kukdh1::Setting::ID_OPEN).c_str(), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hWnd, (HMENU)ID_BUTTON_OPEN, lpCreateStruct->hInstance, NULL);
+    app.hButtonExctact  = CreateWindow( WC_BUTTON, app.CSetting.getString(kukdh1::Setting::ID_EXTRACT).c_str(), WS_CHILD | WS_VISIBLE | WS_DISABLED | BS_PUSHBUTTON, 0, 0, 0, 0, hWnd, (HMENU)ID_BUTTON_EXTRACT, lpCreateStruct->hInstance, NULL);
+    app.hTreeFileSystem = CreateWindow( WC_TREEVIEW, NULL, WS_CHILD | WS_VISIBLE | TVS_DISABLEDRAGDROP | TVS_HASBUTTONS | TVS_TRACKSELECT | TVS_LINESATROOT, 0, 0, 0, 0, hWnd, (HMENU)ID_TREE_FILESYSTEM, lpCreateStruct->hInstance, NULL);
+    app.hStatusBar      = CreateWindow( STATUSCLASSNAME, NULL, WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP, 0, 0, 0, 0, hWnd, (HMENU)ID_STATUSBAR, lpCreateStruct->hInstance, NULL);
+    app.hStaticInfo     = CreateWindow( WC_STATIC, NULL, WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 0, 0, 0, 0, hWnd, (HMENU)ID_STATIC, lpCreateStruct->hInstance, NULL);
 
     /* Set theme*/
-    SetWindowTheme(app.hTreeFileSystem, L"Explorer", NULL);
+    SetWindowTheme( app.hTreeFileSystem, L"Explorer", NULL );
 
     /* Create/Apply font */
-    app.hFont = CreateFont(FONT_SIZE, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_ROMAN, FONT_FACE);
+    app.hFont           = CreateFont(FONT_SIZE, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_ROMAN, FONT_FACE);
 
     SendMessage(app.hButtonOpen, WM_SETFONT, (WPARAM)app.hFont, TRUE);
     SendMessage(app.hButtonExctact, WM_SETFONT, (WPARAM)app.hFont, TRUE);
@@ -113,10 +114,9 @@ BOOL Cls_OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct) {
     SendMessage(app.hStatusBar, SB_SETTEXT, NULL, (LPARAM)app.CSetting.getString(kukdh1::Setting::ID_STATUS_IDLE).c_str());
 
     /* Set Progress bar */
-    RECT rtArea;
-
-    SendMessage(app.hStatusBar, SB_GETRECT, 1, (LPARAM)&rtArea);
-    app.hProgressBar = CreateWindow(PROGRESS_CLASS, NULL, WS_CHILD | WS_VISIBLE | PBS_SMOOTH, rtArea.left, rtArea.top, rtArea.right - rtArea.left, rtArea.bottom - rtArea.top, app.hStatusBar, NULL, lpCreateStruct->hInstance, NULL);
+    RECT rtArea ;
+    SendMessage( app.hStatusBar, SB_GETRECT, 1, (LPARAM)&rtArea );
+    app.hProgressBar = CreateWindow( PROGRESS_CLASS, NULL, WS_CHILD | WS_VISIBLE | PBS_SMOOTH, rtArea.left, rtArea.top, rtArea.right - rtArea.left, rtArea.bottom - rtArea.top, app.hStatusBar, NULL, lpCreateStruct->hInstance, NULL);
 
     return TRUE;
 }
@@ -334,11 +334,11 @@ DWORD WINAPI FileThread( LPVOID arg )
     std::vector<std::string> paths;
     WCHAR buffer[64];
 
-    EnableWindow(app.hButtonOpen, FALSE);
-    EnableWindow(app.hTreeFileSystem, FALSE);
-    SendMessage( app.hStatusBar, SB_SETTEXT, 0, (LPARAM)app.CSetting.getString(kukdh1::Setting::ID_STATUS_BUSY).c_str());
-
-    SendMessage( app.hProgressBar, PBM_SETRANGE32, 0, app.CMeta->m_PAZCount);
+    EnableWindow( app.hButtonOpen, FALSE );
+    EnableWindow( app.hTreeFileSystem, FALSE );
+    SendMessage( app.hStatusBar, SB_SETTEXT, 0, (LPARAM)app.CSetting.getString(kukdh1::Setting::ID_STATUS_BUSY).c_str() );
+    //SendMessage( app.hProgressBar, PBM_SETRANGE32, 0, app.CMeta->m_PAZCount);
+    SendMessage( app.hProgressBar, PBM_SETRANGE32, 0, app.CMeta->m_AssetCount );
     uint32_t i = 0;
 
     /*for ( auto iter = app.CMeta->m_PAZs.begin() ; iter != app.CMeta->m_PAZs.end() ; iter++ ) 
@@ -447,7 +447,8 @@ bool CheckEncrypt(std::string& filename, uint32_t size) {
     return false;
 }
 
-void ExtractFile(std::wstring& path, kukdh1::FileInfo& file, kukdh1::Crypt& cipher) {
+void ExtractFile(std::wstring& path, kukdh1::FileInfo& file, kukdh1::Crypt& cipher) 
+{
     bool bCompressed = false;
     bool bEncrypted = true;
 
