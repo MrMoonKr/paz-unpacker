@@ -3,6 +3,7 @@
 #ifndef _MAIN_H_
 #define _MAIN_H_
 
+#include <tchar.h>
 #include <Windows.h>
 #include <windowsx.h>
 #include <CommCtrl.h>
@@ -80,6 +81,6 @@ typedef struct _AppData
         SAFE_DELETE(CMeta);
         SAFE_FREE(wpszFolderPath);
     }
-} AppData;
+} AppData  ;
 
 #endif

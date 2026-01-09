@@ -27,14 +27,14 @@ namespace kukdh1
         };
 
     private:
-        Tree*               pParent;
+        Tree*               m_pParent;
         std::vector<Tree*>  vChildFiles;
         std::vector<Tree*>  vChildFolders;
         std::string         sName;
 
-        TREE_TYPE           ttType;
+        TREE_TYPE           m_Type;
         HTREEITEM           hThis;
-        BOOL                bAdded;
+        BOOL                m_Added;
 
         FileInfo            fiFileInfo;
         LARGE_INTEGER       liCapacity;

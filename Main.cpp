@@ -1,5 +1,21 @@
 #include "Main.h"
 
+//------------------------------------------------------------------------------
+
+#if defined(DEBUG) || defined(_DEBUG)
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h> // _CrtSetDbgFlag()
+
+#define DEBUG_NORMALBLOCK new ( _NORMAL_BLOCK, __FILE__, __LINE__ )
+#ifdef new
+#undef new
+#endif
+#define new DEBUG_NORMALBLOCK
+#endif 
+
+//------------------------------------------------------------------------------
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam);
 DWORD WINAPI FileThread(LPVOID arg);
 DWORD WINAPI ExtractThread(LPVOID arg);
@@ -7,13 +23,31 @@ DWORD WINAPI AddThread(LPVOID arg);
 
 AppData app;
 
-int APIENTRY wWinMain(_In_ HINSTANCE    hInstance, 
-                    _In_opt_ HINSTANCE  hPrevInstance, 
-                    _In_ LPWSTR         lpCmdLine, 
-                    _In_ int            nCmdShow)
+
+//------------------------------------------------------------------------------
+
+/// <summary>
+/// 메인 진입점 함수
+/// </summary>
+/// <param name="hInstance">현재 프로세스의 핸들</param>
+/// <param name="hPrevInstance">이전 프로세스의 핸들</param>
+/// <param name="lpCmdLine">명령행 문자열</param>
+/// <param name="nCmdShow">보이기 옵션</param>
+/// <returns>프로그램 종료시 시스템에 전달할 정수값</returns>
+int APIENTRY wWinMain(  _In_ HINSTANCE      hInstance , 
+                        _In_opt_ HINSTANCE  hPrevInstance , 
+                        _In_ LPWSTR         lpCmdLine , 
+                        _In_ int            nCmdShow )
 {
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
+#if defined( DEBUG ) || defined( _DEBUG )
+    _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+#endif
+
+    int* lick = new int; // 메모리 누수 테스트용
+
+    UNREFERENCED_PARAMETER( hPrevInstance );
+    UNREFERENCED_PARAMETER( lpCmdLine );
+
 
     HWND hWnd;
     WNDCLASS wndclass;
@@ -41,8 +75,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE    hInstance,
 
     RegisterClass(&wndclass);
 
-    hWnd = CreateWindow(lpszClass.c_str(), lpszClass.c_str(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
-    ShowWindow(hWnd, nCmdShow);
+    hWnd = CreateWindow( lpszClass.c_str(), lpszClass.c_str(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
+    ShowWindow( hWnd, nCmdShow );
 
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
@@ -213,77 +247,84 @@ void Cls_OnDrawItem(HWND hWnd, const DRAWITEMSTRUCT* lpDrawItem) {
     }
 }
 
+/// <summary>
+/// 메인 윈도우 프로시저
+/// </summary>
 LRESULT CALLBACK WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) 
 {
-    switch (uMsg) 
+    switch ( uMsg ) 
     {
-        HANDLE_MSG(hWnd, WM_CREATE, Cls_OnCreate);
-        HANDLE_MSG(hWnd, WM_DESTROY, Cls_OnDestroy);
-        HANDLE_MSG(hWnd, WM_SIZE, Cls_OnSize);
-        HANDLE_MSG(hWnd, WM_GETMINMAXINFO, Cls_OnGetMinMaxInfo);
-        HANDLE_MSG(hWnd, WM_COMMAND, Cls_OnCommand);
-        HANDLE_MSG(hWnd, WM_DRAWITEM, Cls_OnDrawItem);
+        HANDLE_MSG( hWnd, WM_CREATE, Cls_OnCreate );
+        HANDLE_MSG( hWnd, WM_DESTROY, Cls_OnDestroy );
+        HANDLE_MSG( hWnd, WM_SIZE, Cls_OnSize );
+        HANDLE_MSG( hWnd, WM_GETMINMAXINFO, Cls_OnGetMinMaxInfo );
+        HANDLE_MSG( hWnd, WM_COMMAND, Cls_OnCommand );
+        HANDLE_MSG( hWnd, WM_DRAWITEM, Cls_OnDrawItem );
 
         case WM_NOTIFY:
-        {
-            LPNMHDR hdr = (LPNMHDR)lParam;
-            if ( hdr->idFrom == ID_TREE_FILESYSTEM ) // Tree view
             {
-                LPNMTREEVIEW ntv = (LPNMTREEVIEW)lParam;
-                kukdh1::Tree* pTree;
-
-                if ( hdr->code == TVN_SELCHANGED ) // Selection changed
+                LPNMHDR hdr = (LPNMHDR)lParam;
+                if ( hdr->idFrom == ID_TREE_FILESYSTEM ) // Tree view
                 {
-                    WCHAR* pszBuffer;
-                    std::wstring capacity;
+                    LPNMTREEVIEW ntv = (LPNMTREEVIEW)lParam;
+                    kukdh1::Tree* pTree;
 
-                    pszBuffer = (WCHAR*)calloc(1024, sizeof(WCHAR));
-                    pTree = (kukdh1::Tree*)ntv->itemNew.lParam;
-                    if (pTree != NULL) {
-                        switch (pTree->GetType()) {
-                        case kukdh1::Tree::TREE_TYPE_ROOT:
-                            if (app.CMeta != NULL) {
-                                kukdh1::ConvertCapacity(app.CTree->GetCapacity(), capacity);
-
-                                wsprintf(pszBuffer, app.CSetting.getString(kukdh1::Setting::ID_META_FILE_INFO).c_str(), app.CMeta->m_Version, app.CMeta->m_PAZCount, capacity.c_str());
-                                SendMessage(app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)pszBuffer);
-                            }
-
-                            break;
-                        case kukdh1::Tree::TREE_TYPE_FOLDER:
-                            kukdh1::ConvertCapacity(pTree->GetCapacity(), capacity);
-                            wsprintf(pszBuffer, app.CSetting.getString(kukdh1::Setting::ID_INTERNAL_FOLDER_INFO).c_str(), pTree->GetName().c_str(), capacity.c_str());
-                            SendMessage(app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)pszBuffer);
-                            break;
-                        case kukdh1::Tree::TREE_TYPE_FILE:
-                            kukdh1::ConvertCapacity(pTree->GetCapacity(), capacity);
-                            wsprintf(pszBuffer, app.CSetting.getString(kukdh1::Setting::ID_INTERNAL_FILE_INFO).c_str(), pTree->GetName().c_str(), capacity.c_str(), pTree->GetFileInfo().wsPazFullPath.c_str(), pTree->GetFileInfo().sFullPath.c_str());
-                            SendMessage(app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)pszBuffer);
-                            break;
-                        }
-                    }
-
-                    free(pszBuffer);
-                }
-                else if ( hdr->code == TVN_ITEMEXPANDING ) // tree node expanding
-                {
-                    if ( ntv->action == TVE_EXPAND ) 
+                    if ( hdr->code == TVN_SELCHANGED ) // Selection changed
                     {
+                        WCHAR* pszBuffer;
+                        std::wstring capacity;
+
+                        pszBuffer = (WCHAR*)calloc(1024, sizeof(WCHAR));
                         pTree = (kukdh1::Tree*)ntv->itemNew.lParam;
-                        if ( pTree != NULL ) 
+                        if (pTree != NULL) {
+                            switch (pTree->GetType()) {
+                            case kukdh1::Tree::TREE_TYPE_ROOT:
+                                if (app.CMeta != NULL) {
+                                    kukdh1::ConvertCapacity(app.CTree->GetCapacity(), capacity);
+
+                                    wsprintf(pszBuffer, app.CSetting.getString(kukdh1::Setting::ID_META_FILE_INFO).c_str(), app.CMeta->m_Version, app.CMeta->m_PAZCount, capacity.c_str());
+                                    SendMessage(app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)pszBuffer);
+                                }
+
+                                break;
+                            case kukdh1::Tree::TREE_TYPE_FOLDER:
+                                kukdh1::ConvertCapacity(pTree->GetCapacity(), capacity);
+                                wsprintf(pszBuffer, app.CSetting.getString(kukdh1::Setting::ID_INTERNAL_FOLDER_INFO).c_str(), pTree->GetName().c_str(), capacity.c_str());
+                                SendMessage(app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)pszBuffer);
+                                break;
+                            case kukdh1::Tree::TREE_TYPE_FILE:
+                                kukdh1::ConvertCapacity(pTree->GetCapacity(), capacity);
+                                wsprintf(pszBuffer, app.CSetting.getString(kukdh1::Setting::ID_INTERNAL_FILE_INFO).c_str(), pTree->GetName().c_str(), capacity.c_str(), pTree->GetFileInfo().wsPazFullPath.c_str(), pTree->GetFileInfo().sFullPath.c_str());
+                                SendMessage(app.hStaticInfo, WM_SETTEXT, NULL, (LPARAM)pszBuffer);
+                                break;
+                            }
+                        }
+
+                        free(pszBuffer);
+                    }
+                    else if ( hdr->code == TVN_ITEMEXPANDING ) // tree node expanding
+                    {
+                        if ( ntv->action == TVE_EXPAND ) 
                         {
-                            HANDLE hThread = CreateThread( NULL, 0, AddThread, (LPVOID)pTree, NULL, NULL );
-                            CloseHandle( hThread );
+                            pTree = (kukdh1::Tree*)ntv->itemNew.lParam;
+                            if ( pTree != NULL ) 
+                            {
+                                HANDLE hThread = CreateThread( NULL, 0, AddThread, (LPVOID)pTree, NULL, NULL );
+                                CloseHandle( hThread );
+                            }
                         }
                     }
                 }
             }
-        }
+            break;
 
-        return 0;
+        //return 0;
+        default:
+            return DefWindowProc( hWnd, uMsg, wParam, lParam );
     }
 
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    //return DefWindowProc( hWnd, uMsg, wParam, lParam );
+    return 0;
 }
 
 DWORD WINAPI FileThread( LPVOID arg ) 

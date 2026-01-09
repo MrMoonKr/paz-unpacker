@@ -23,6 +23,11 @@ namespace kukdh1
         uint32_t            mChecksum;              ///< hash 
         uint32_t            mFileSize;              ///< paz archive size
 
+        PADChunk()
+            : mFileNumber(0), mChecksum(0), mFileSize(0)
+        {
+        }
+
     };
 
     struct PADAsset
@@ -34,6 +39,11 @@ namespace kukdh1
         uint32_t            mOffset;
         uint32_t            mCompressedSize;
         uint32_t            mUncompressedSize;
+
+        PADAsset()
+            : mHash(0), mFolderNameIndex(0), mFileNameIndex(0), mPazIndex(0), mOffset(0), mCompressedSize(0), mUncompressedSize(0)
+        {
+        }
 
     };
     #pragma ( pack( pop ) )

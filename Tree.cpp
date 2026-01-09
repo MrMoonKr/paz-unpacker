@@ -1,62 +1,84 @@
 #include "Tree.h"
 
-namespace kukdh1 {
-    bool TreeCompare(Tree* a, Tree* b) {
-        if (a->GetName().compare(b->GetName()) <= 0) {
+namespace kukdh1 
+{
+    bool TreeCompare( Tree* a, Tree* b )
+    {
+        if ( a->GetName().compare( b->GetName() ) <= 0 )
+        {
             return true;
         }
 
         return false;
     }
 
-    Tree::Tree(TREE_TYPE type) {
-        pParent = NULL;
-        ttType = type;
+    Tree::Tree( TREE_TYPE type )
+    {
+        m_pParent = NULL;
+        m_Type = type;
         hThis = NULL;
         liCapacity.QuadPart = 0;
-        bAdded = FALSE;
+        m_Added = FALSE;
+
+        m_AssetInfo;
     }
 
-    Tree::~Tree() {
+    Tree::~Tree() 
+    {
         for (auto iter = vChildFiles.begin(); iter != vChildFiles.end(); iter++) {
             delete (*iter);
         }
-        for (auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++) {
+        for (auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++) 
+        {
             delete (*iter);
         }
     }
 
-    void Tree::AddToTree(HWND hTree) {
-        if (bAdded) {
+    void Tree::AddToTree( HWND hTree ) 
+    {
+        if ( m_Added ) // 이미 추가됨
+        {
             return;
         }
 
-        if (ttType == TREE_TYPE_ROOT) {
-            hThis = AddTreeItem(hTree, NULL, TVI_ROOT, L"/", (LPARAM)this);
+        if ( m_Type == TREE_TYPE_ROOT ) 
+        {
+            hThis = AddTreeItem( hTree, NULL, TVI_ROOT, L"/", (LPARAM)this );
         }
-        else if (pParent != NULL) {
+        else if ( m_pParent != NULL )
+        {
             std::wstring temp;
 
-            ConvertWidechar(sName, temp);
-            hThis = AddTreeItem(hTree, pParent->GetHandle(), TVI_LAST, (WCHAR*)temp.c_str(), (LPARAM)this);
+            ConvertWidechar( sName, temp );
+            hThis = AddTreeItem( hTree, m_pParent->GetHandle(), TVI_LAST, (WCHAR*)temp.c_str(), (LPARAM)this );
+        }
+        else
+        {
+            // Root가 아닌데 부모가 없음
+            return;
         }
 
-        bAdded = TRUE;
+        m_Added = TRUE;
     }
 
-    void Tree::AddChildsToTree(HWND hTree) {
-        if (ttType != TREE_TYPE_FILE) {
-            for (auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++) {
-                (*iter)->AddToTree(hTree);
+    void Tree::AddChildsToTree( HWND hTree )
+    {
+        if ( this->m_Type != TREE_TYPE_FILE )
+        {
+            for ( auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++)
+            {
+                (*iter)->AddToTree( hTree );
             }
-            for (auto iter = vChildFiles.begin(); iter != vChildFiles.end(); iter++) {
-                (*iter)->AddToTree(hTree);
+            for ( auto iter = vChildFiles.begin(); iter != vChildFiles.end(); iter++ )
+            {
+                (*iter)->AddToTree( hTree );
             }
         }
     }
 
-    void Tree::AddGrandchildsToTree(HWND hTree, LPVOID arg, std::function<void(LPVOID, size_t, size_t)> callback) {
-        if (ttType != TREE_TYPE_FILE) {
+    void Tree::AddGrandchildsToTree( HWND hTree, LPVOID arg, std::function<void(LPVOID, size_t, size_t)> callback ) 
+    {
+        if (m_Type != TREE_TYPE_FILE) {
             size_t stAll = 0;
             size_t i = 0;
 
@@ -74,27 +96,30 @@ namespace kukdh1 {
         }
     }
 
-    void Tree::SetFileInfo(Tree* pParent, std::string& name, FileInfo& fiFile) {
-        this->pParent = pParent;
+    void Tree::SetFileInfo( Tree* pParent, std::string& name, FileInfo& fiFile )
+    {
+        this->m_pParent = pParent;
         fiFileInfo = fiFile;
         sName = name;
 
-        ttType = TREE_TYPE_FILE;
+        m_Type = TREE_TYPE_FILE;
     }
 
-    void Tree::SetFileInfo(Tree* pParent, std::string& name, PADAsset& fiFile) {
-        this->pParent = pParent;
+    void Tree::SetFileInfo(Tree* pParent, std::string& name, PADAsset& fiFile) 
+    {
+        this->m_pParent = pParent;
         this->m_AssetInfo = fiFile;
         sName = name;
 
-        ttType = TREE_TYPE_FILE;
+        m_Type = TREE_TYPE_FILE;
     }
 
-    void Tree::SetFolderInfo(Tree* pParent, std::string& name) {
-        this->pParent = pParent;
+    void Tree::SetFolderInfo( Tree* pParent, std::string& name )
+    {
+        this->m_pParent = pParent;
         sName = name;
 
-        ttType = TREE_TYPE_FOLDER;
+        m_Type = TREE_TYPE_FOLDER;
     }
 
     void Tree::AddChild(Tree* pChild) {
@@ -111,7 +136,7 @@ namespace kukdh1 {
 
     void Tree::SortChild() {
         // Can be parallelize
-        if (ttType != TREE_TYPE_FILE) {
+        if (m_Type != TREE_TYPE_FILE) {
             for (auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++) {
                 (*iter)->SortChild();
             }
@@ -124,7 +149,7 @@ namespace kukdh1 {
     LARGE_INTEGER Tree::UpdateCapacity() {
         liCapacity.QuadPart = 0;
 
-        if (ttType == TREE_TYPE_FILE) {
+        if (m_Type == TREE_TYPE_FILE) {
             liCapacity.QuadPart = fiFileInfo.uiOriginalSize;
         }
         else {
@@ -156,7 +181,7 @@ namespace kukdh1 {
     }
 
     Tree::TREE_TYPE Tree::GetType() {
-        return ttType;
+        return m_Type;
     }
 
     FileInfo Tree::GetFileInfo() {
@@ -168,11 +193,11 @@ namespace kukdh1 {
     }
 
     BOOL Tree::IsAdded() {
-        return bAdded;
+        return m_Added;
     }
 
     BOOL Tree::IsChildAdded() {
-        if (ttType != TREE_TYPE_FILE) {
+        if (m_Type != TREE_TYPE_FILE) {
             if (vChildFiles.size() > 0) {
                 return vChildFiles.at(0)->IsAdded();
             }
@@ -186,7 +211,7 @@ namespace kukdh1 {
 
     BOOL Tree::IsGrandchildAdded() 
     {
-        if ( ttType != TREE_TYPE_FILE ) 
+        if ( m_Type != TREE_TYPE_FILE ) 
         {
             if ( vChildFolders.size() > 0 ) 
             {
@@ -214,8 +239,22 @@ namespace kukdh1 {
     }
 
     void Tree::GetFileList(std::vector<kukdh1::FileInfo>& vList) {
-        if (ttType == TREE_TYPE_FILE) {
+        if (m_Type == TREE_TYPE_FILE) {
             vList.push_back(fiFileInfo);
+        }
+        else {
+            for (auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++) {
+                (*iter)->GetFileList(vList);
+            }
+            for (auto iter = vChildFiles.begin(); iter != vChildFiles.end(); iter++) {
+                (*iter)->GetFileList(vList);
+            }
+        }
+    }
+
+    void Tree::GetFileList(std::vector<kukdh1::PADAsset>& vList) {
+        if (m_Type == TREE_TYPE_FILE) {
+            vList.push_back(m_AssetInfo);
         }
         else {
             for (auto iter = vChildFolders.begin(); iter != vChildFolders.end(); iter++) {
